@@ -1,6 +1,12 @@
 # Reviren — Plan
 
-> **Status (2026-06-14):** Step 1 partially done — Next.js 16 + Tailwind v4 + shadcn/ui scaffolded with a simple placeholder UI (sidebar nav + Dashboard/Roadmaps/Sessions/Feynman/Flashcards pages, mock data). `npm run build` passes. Next: user moves this UI into Figma to design it as desired. Still pending in step 1: Supabase client + Drizzle + `initChatModel` wrapper + env vars, plus external accounts/keys (Supabase, Anthropic, Google AI, Tavily).
+> **Status (2026-06-15):** Steps 1–6 complete. **Next: Step 7 — session planning (AI mode + manual mode).**
+> - ✅ 1. Project setup — Next.js 16 + Tailwind v4 + shadcn/ui + Supabase + Drizzle + LangChain model wrappers + env vars
+> - ✅ 2. Drizzle schema + migration — roadmaps, topics, sessions, session_topics, feynman_reviews, flashcards
+> - ✅ 3. Roadmap agent — LangGraph.js graph (Gemini 3.1 Pro + Tavily) with SSE streaming
+> - ✅ 4. Roadmap creation UI — topic input → agent → live progress → preview → save
+> - ✅ 5. Roadmap viewer + editor — inline edit title/description, add/remove topics, add/remove/resources per topic, delete roadmap
+> - ✅ 6. Roadmap import — paste text or upload .md/.pdf/.docx → Sonnet 4.6 parses → same preview → save
 
 ## What it is
 A single-user web app for structured, self-directed learning: it generates custom AI-powered roadmaps, plans study sessions against your available time, tracks topic progress, and evaluates understanding via Feynman review. Personal use first; multi-user production is the stated trajectory.
