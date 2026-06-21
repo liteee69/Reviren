@@ -19,7 +19,7 @@ const SessionPlanTopicSchema = z.object({
   topicId: z.string(),
   title: z.string(),
   sectionTitle: z.string(),
-  allocatedMinutes: z.number().int().min(30),
+  allocatedMinutes: z.number().int().min(60),
   subtasks: z.array(SubtaskPlanSchema).min(2).max(6),
 })
 
