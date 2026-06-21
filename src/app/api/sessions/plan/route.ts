@@ -24,13 +24,17 @@ const SessionPlanTopicSchema = z.object({
 })
 
 const SessionPlanSchema = z.object({
-  topics: z.array(SessionPlanTopicSchema).min(1).max(6),
+  topics: z.array(SessionPlanTopicSchema).min(1).max(4),
 })
 
 export async function POST(req: NextRequest) {
   const { roadmapId, hours } = await req.json()
   if (!roadmapId || !hours) {
     return NextResponse.json({ error: 'Missing params' }, { status: 400 })
+  }
+
+  if (typeof hours !== 'number' || hours <= 0 || hours > 12) {
+    return NextResponse.json({ error: 'Hours must be between 0.5 and 12' }, { status: 400 })
   }
 
   const [roadmap] = await db.select().from(roadmaps).where(eq(roadmaps.id, roadmapId))
