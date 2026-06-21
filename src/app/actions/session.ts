@@ -68,6 +68,9 @@ export async function saveSessionProgress(
   sessionId: string,
   deltas: Array<{ sessionTopicId: string; topicId: string; delta: number }>
 ) {
+  const [existingSession] = await db.select({ endedAt: sessions.endedAt }).from(sessions).where(eq(sessions.id, sessionId))
+  if (existingSession?.endedAt) return
+
   for (const { sessionTopicId, topicId, delta } of deltas) {
     const [topic] = await db.select({ progress: topics.progress }).from(topics).where(eq(topics.id, topicId))
     if (!topic) continue
@@ -80,9 +83,4 @@ export async function saveSessionProgress(
   await db.update(sessions).set({ endedAt: new Date() }).where(eq(sessions.id, sessionId))
   revalidatePath('/sessions')
   revalidatePath('/roadmaps')
-}
-
-export async function endSession(id: string) {
-  await db.update(sessions).set({ endedAt: new Date() }).where(eq(sessions.id, id))
-  revalidatePath('/sessions')
 }

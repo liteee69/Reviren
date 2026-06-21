@@ -23,6 +23,7 @@ export async function POST(req: NextRequest) {
 
   const [session] = await db.select().from(sessions).where(eq(sessions.id, sessionId))
   if (!session) return NextResponse.json({ error: 'Session not found' }, { status: 404 })
+  if (session.endedAt) return NextResponse.json({ error: 'Session already ended' }, { status: 409 })
 
   const sessionTopicRows = await db
     .select({

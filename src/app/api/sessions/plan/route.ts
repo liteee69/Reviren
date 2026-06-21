@@ -33,7 +33,7 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: 'Missing params' }, { status: 400 })
   }
 
-  if (typeof hours !== 'number' || hours <= 0 || hours > 12) {
+  if (typeof hours !== 'number' || hours < 0.5 || hours > 12) {
     return NextResponse.json({ error: 'Hours must be between 0.5 and 12' }, { status: 400 })
   }
 

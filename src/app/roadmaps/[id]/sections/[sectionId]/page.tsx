@@ -49,6 +49,7 @@ export default async function SectionPage({
 
       <SectionTopics
         topics={data.topics}
+        sectionId={sectionId}
       />
     </div>
   )
