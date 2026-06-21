@@ -12,8 +12,15 @@
     {
       "idx": 1,
       "version": "7",
-      "when": 1782042390229,
+      "when": 1781610171483,
       "tag": "0001_add_phases_sections_subtasks",
+      "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1782200000000,
+      "tag": "0002_fix_topics_section_fk",
       "breakpoints": true
     }
   ]
