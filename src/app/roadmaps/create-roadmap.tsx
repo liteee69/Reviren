@@ -92,6 +92,29 @@ export function CreateRoadmap() {
     }
   }
 
+  async function handleFile(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0]
+    if (!file) return
+    setError('')
+    setStatus('importing')
+    setRoadmap(null)
+
+    try {
+      const form = new FormData()
+      form.append('file', file)
+      const res = await fetch('/api/roadmap/parse-file', { method: 'POST', body: form })
+      const data = await res.json()
+      if (!res.ok || data.error) throw new Error(data.error ?? 'Failed to read file')
+      setImportText(data.text)
+      setStatus('idle')
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to read file')
+      setStatus('error')
+    } finally {
+      e.target.value = ''
+    }
+  }
+
   async function importRoadmap() {
     if (!importText.trim()) return
     setStatus('importing')
@@ -168,6 +191,20 @@ export function CreateRoadmap() {
             </div>
           ) : (
             <div className="space-y-3">
+              <div className="flex items-center gap-2">
+                <label className={`inline-flex items-center gap-2 rounded-md border border-border px-3 py-1.5 text-sm cursor-pointer hover:bg-accent/50 transition-colors ${busy ? 'opacity-50 pointer-events-none' : ''}`}>
+                  <span>Upload file</span>
+                  <span className="text-xs text-muted-foreground">.pdf · .md · .txt</span>
+                  <input
+                    type="file"
+                    accept=".pdf,.md,.txt"
+                    className="sr-only"
+                    onChange={handleFile}
+                    disabled={busy}
+                  />
+                </label>
+                <span className="text-xs text-muted-foreground">or paste below</span>
+              </div>
               <textarea
                 placeholder="Paste your roadmap here — markdown, plain text, bullet points, anything…"
                 value={importText}
