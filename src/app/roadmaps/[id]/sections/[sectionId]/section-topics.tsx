@@ -13,12 +13,8 @@ type Topic = {
 
 export function SectionTopics({
   topics,
-  sectionId,
-  roadmapId,
 }: {
   topics: Topic[]
-  sectionId: string
-  roadmapId: string
 }) {
   if (topics.length === 0) {
     return <p className="text-sm text-muted-foreground">No topics in this section yet.</p>
