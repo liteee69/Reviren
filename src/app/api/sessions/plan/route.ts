@@ -24,7 +24,10 @@ const SessionPlanTopicSchema = z.object({
 })
 
 const SessionPlanSchema = z.object({
-  topics: z.array(SessionPlanTopicSchema).min(1).max(4),
+  topics: z.preprocess(
+    (val) => (typeof val === 'string' ? JSON.parse(val) : val),
+    z.array(SessionPlanTopicSchema).min(1).max(4)
+  ),
 })
 
 export async function POST(req: NextRequest) {
