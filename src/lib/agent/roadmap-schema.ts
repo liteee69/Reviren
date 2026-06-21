@@ -12,9 +12,14 @@ export const TopicSchema = z.object({
   resources: z.array(ResourceSchema),
 })
 
-export const PhaseSchema = z.object({
-  title: z.string(), // e.g. "Phase 1: Fundamentals"
+export const SectionSchema = z.object({
+  title: z.string(),
   topics: z.array(TopicSchema),
+})
+
+export const PhaseSchema = z.object({
+  title: z.string(), // "Phase N: <Name>"
+  sections: z.array(SectionSchema),
 })
 
 export const RoadmapOutputSchema = z.object({

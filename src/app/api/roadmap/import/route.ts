@@ -16,11 +16,13 @@ export async function POST(req: NextRequest) {
 
   const prompt = `Parse the following learning roadmap text into a structured format.
 
-Extract phases, topics, descriptions, and any mentioned resources. If resources are mentioned (books, videos, courses, links), include them with the appropriate type. If no resources are mentioned for a topic, use an empty array.
+Extract phases, sections (subject domains), topics, descriptions, and any mentioned resources. Group topics by subject domain into sections within each phase. If resources are mentioned (books, videos, courses, links), include them with the appropriate type. If no resources are mentioned for a topic, use an empty array.
 
 Infer a clear title and description for the overall roadmap if not explicitly stated.
 
 Phase titles must follow the format "Phase N: <Name>".
+Section titles should be subject domain names (e.g. "Mathematics", "Python", "Electronics").
+If the text has no clear sections, group all topics under a single section titled "General".
 
 Text to parse:
 ${text.trim()}`

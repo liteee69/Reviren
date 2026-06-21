@@ -41,8 +41,9 @@ ${state.topicSearchResults}
 ${state.resourceSearchResults}
 
 Rules:
-- 3–5 phases, each with 3–6 topics
-- Topics ordered from fundamental to advanced within each phase
+- 3–5 phases, each with 2–4 sections (subject domains like "Mathematics", "Programming", "Electronics")
+- Each section has 2–5 topics ordered from fundamental to advanced
+- Group topics by subject domain into sections — never mix unrelated subjects in one section
 - Every topic must have 2–4 real, specific resources with accurate URLs from the research
 - Descriptions should explain WHY this topic matters, not just what it is
 - Phase titles follow the format "Phase N: <Name>"
