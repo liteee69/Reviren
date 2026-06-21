@@ -1,12 +1,12 @@
 # Reviren — Plan
 
-> **Status (2026-06-14):** All 13 steps complete. App fully functional.
+> **Status (2026-06-21):** All 13 original steps complete + step 14 (sections, progress, session overhaul) complete. App fully functional.
 > - ✅ 1. Project setup — Next.js 16 + Tailwind v4 + shadcn/ui + Supabase + Drizzle + LangChain model wrappers + env vars
 > - ✅ 2. Drizzle schema + migration — roadmaps, topics, sessions, session_topics, feynman_reviews, flashcards
 > - ✅ 3. Roadmap agent — LangGraph.js graph (Gemini 3.1 Pro + Tavily) with SSE streaming
 > - ✅ 4. Roadmap creation UI — topic input → agent → live progress → preview → save
 > - ✅ 5. Roadmap viewer + editor — inline edit title/description, add/remove topics, add/remove/resources per topic, delete roadmap
-> - ✅ 6. Roadmap import — paste text or upload .md/.pdf/.docx → Sonnet 4.6 parses → same preview → save
+> - ✅ 6. Roadmap import — paste text or upload .md/.pdf (.docx deferred) → Sonnet 4.6 parses → same preview → save
 > - ✅ 7. Session planning — roadmap + hours → AI mode (Sonnet 4.6 prioritises topics) or manual checklist → create session
 > - ✅ 8. Topic tracking — session view with checkboxes, mark covered, end session
 > - ✅ 9. Feynman review — roadmap/topic selector → explanation → Sonnet 4.6 scoring → save
@@ -14,6 +14,14 @@
 > - ✅ 11. Pomodoro timer — 25/5 and 50/10 modes, start/pause/reset, auto-switch phases
 > - ✅ 12. Music player — YouTube lo-fi iframe in session view (show/hide)
 > - ✅ 13. Dashboard — real DB data: roadmap count, sessions this week, unknown flashcard count, roadmap progress
+> - ✅ 14. Sections, progress & session overhaul:
+>   - Roadmap hierarchy: phases (pill tabs) → sections (cards) → topics (list with progress bars)
+>   - Topic progress 0–100%, rolled up to section and phase level
+>   - New DB tables: roadmap_phases, sections, subtasks; updated topics (sectionId, progress), session_topics (allocatedMinutes, progressDelta)
+>   - AI session planning rewritten: cross-section balancing, 1h+ per topic, subtask-level detail with resources
+>   - Session view: subtask checkboxes with live check-off
+>   - Post-session: AI calculates progress delta per topic, hybrid override UI before saving
+>   - File upload to roadmap import: .pdf and .md/.txt (via pdf-parse)
 
 ## What it is
 A single-user web app for structured, self-directed learning: it generates custom AI-powered roadmaps, plans study sessions against your available time, tracks topic progress, and evaluates understanding via Feynman review. Personal use first; multi-user production is the stated trajectory.
