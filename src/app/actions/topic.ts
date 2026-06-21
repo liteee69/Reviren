@@ -23,15 +23,14 @@ export async function deleteTopic(id: string) {
   revalidatePath('/roadmaps/[id]', 'page')
 }
 
-export async function addTopic(roadmapId: string, phase: string, title: string, description: string) {
+export async function addTopic(sectionId: string, title: string, description: string) {
   const [{ maxOrder }] = await db
     .select({ maxOrder: max(topics.order) })
     .from(topics)
-    .where(eq(topics.roadmapId, roadmapId))
+    .where(eq(topics.sectionId, sectionId))
 
   await db.insert(topics).values({
-    roadmapId,
-    phase,
+    sectionId,
     title,
     description: description || null,
     order: (maxOrder ?? 0) + 1,

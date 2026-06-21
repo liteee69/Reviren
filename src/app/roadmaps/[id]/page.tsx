@@ -2,63 +2,81 @@ export const dynamic = 'force-dynamic'
 
 import { notFound } from 'next/navigation'
 import { db } from '@/lib/db'
-import { roadmaps, topics } from '@/lib/db/schema'
+import { roadmaps, roadmapPhases, sections, topics } from '@/lib/db/schema'
 import { eq, asc } from 'drizzle-orm'
-import { TopicCard } from './topic-card'
-import { AddTopic } from './add-topic'
 import { DeleteRoadmapButton } from './delete-roadmap'
+import { PhaseTabs } from './phase-tabs'
+import { calcSectionProgress } from '@/lib/progress'
 
-async function getRoadmap(id: string) {
+async function getRoadmapData(id: string) {
   const [roadmap] = await db.select().from(roadmaps).where(eq(roadmaps.id, id))
   if (!roadmap) return null
 
-  const topicList = await db
+  const phases = await db
     .select()
-    .from(topics)
-    .where(eq(topics.roadmapId, id))
-    .orderBy(asc(topics.order))
+    .from(roadmapPhases)
+    .where(eq(roadmapPhases.roadmapId, id))
+    .orderBy(asc(roadmapPhases.order))
 
-  const phases = topicList.reduce<Record<string, typeof topicList>>((acc, t) => {
-    if (!acc[t.phase]) acc[t.phase] = []
-    acc[t.phase].push(t)
-    return acc
-  }, {})
+  const phasesWithSections = await Promise.all(
+    phases.map(async (phase) => {
+      const sectionRows = await db
+        .select()
+        .from(sections)
+        .where(eq(sections.phaseId, phase.id))
+        .orderBy(asc(sections.order))
 
-  return { roadmap, phases }
+      const sectionsWithProgress = await Promise.all(
+        sectionRows.map(async (section) => {
+          const topicRows = await db
+            .select({ progress: topics.progress, isCompleted: topics.isCompleted })
+            .from(topics)
+            .where(eq(topics.sectionId, section.id))
+
+          const progress = calcSectionProgress(topicRows.map((t) => t.progress))
+          const completedCount = topicRows.filter((t) => t.isCompleted).length
+
+          return {
+            id: section.id,
+            title: section.title,
+            progress,
+            topicCount: topicRows.length,
+            completedCount,
+          }
+        })
+      )
+
+      const phaseProgress = calcSectionProgress(sectionsWithProgress.map((s) => s.progress))
+
+      return { id: phase.id, title: phase.title, progress: phaseProgress, sections: sectionsWithProgress }
+    })
+  )
+
+  return { roadmap, phases: phasesWithSections }
 }
 
 export default async function RoadmapPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params
-  const data = await getRoadmap(id)
+  const data = await getRoadmapData(id)
   if (!data) notFound()
-
-  const { roadmap, phases } = data
 
   return (
     <div className="space-y-8">
       <div className="flex items-start justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-semibold tracking-tight">{roadmap.title}</h1>
-          {roadmap.description && (
-            <p className="text-muted-foreground mt-1">{roadmap.description}</p>
+          <h1 className="text-2xl font-semibold tracking-tight">{data.roadmap.title}</h1>
+          {data.roadmap.description && (
+            <p className="text-muted-foreground mt-1">{data.roadmap.description}</p>
           )}
         </div>
-        <DeleteRoadmapButton id={roadmap.id} title={roadmap.title} />
+        <DeleteRoadmapButton id={data.roadmap.id} title={data.roadmap.title} />
       </div>
 
-      {Object.entries(phases).map(([phase, phaseTopics]) => (
-        <div key={phase} className="space-y-3">
-          <h2 className="text-sm font-medium text-muted-foreground uppercase tracking-wide">
-            {phase}
-          </h2>
-          <div className="grid gap-3 sm:grid-cols-2">
-            {phaseTopics.map((topic) => (
-              <TopicCard key={topic.id} topic={topic} />
-            ))}
-          </div>
-          <AddTopic roadmapId={roadmap.id} phase={phase} />
-        </div>
-      ))}
+      {data.phases.length === 0 ? (
+        <p className="text-sm text-muted-foreground">No phases yet. Generate or import a roadmap to get started.</p>
+      ) : (
+        <PhaseTabs phases={data.phases} roadmapId={id} />
+      )}
     </div>
   )
 }

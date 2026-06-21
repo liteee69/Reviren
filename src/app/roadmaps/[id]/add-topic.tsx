@@ -5,7 +5,7 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { addTopic } from '@/app/actions/topic'
 
-export function AddTopic({ roadmapId, phase }: { roadmapId: string; phase: string }) {
+export function AddTopic({ sectionId }: { sectionId: string }) {
   const [open, setOpen] = useState(false)
   const [title, setTitle] = useState('')
   const [description, setDescription] = useState('')
@@ -14,7 +14,7 @@ export function AddTopic({ roadmapId, phase }: { roadmapId: string; phase: strin
   async function save() {
     if (!title.trim()) return
     setSaving(true)
-    await addTopic(roadmapId, phase, title.trim(), description.trim())
+    await addTopic(sectionId, title.trim(), description.trim())
     setTitle('')
     setDescription('')
     setOpen(false)
