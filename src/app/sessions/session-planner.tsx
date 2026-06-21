@@ -7,9 +7,23 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { createSession } from '@/app/actions/session'
 
+type Subtask = {
+  description: string
+  resourceTitle: string | null
+  resourceUrl: string | null
+  order: number
+}
+
+type AiTopic = {
+  topicId: string
+  title: string
+  sectionTitle: string
+  allocatedMinutes: number
+  subtasks: Subtask[]
+}
+
+type ManualTopic = { id: string; title: string; sectionTitle: string; isCompleted: boolean }
 type Roadmap = { id: string; title: string }
-type AiTopic = { topicId: string; title: string; phase: string; estimatedMinutes: number; reason: string }
-type ManualTopic = { id: string; title: string; phase: string; isCompleted: boolean }
 
 export function SessionPlanner({ roadmaps }: { roadmaps: Roadmap[] }) {
   const router = useRouter()
@@ -34,7 +48,7 @@ export function SessionPlanner({ roadmaps }: { roadmaps: Roadmap[] }) {
       const res = await fetch('/api/sessions/plan', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ roadmapId, minutes }),
+        body: JSON.stringify({ roadmapId, hours }),
       })
       const data = await res.json()
       if (data.error) throw new Error(data.error)
@@ -78,18 +92,30 @@ export function SessionPlanner({ roadmaps }: { roadmaps: Roadmap[] }) {
   async function startSession() {
     setStarting(true)
     try {
-      const id = await createSession(roadmapId, minutes, [...selectedIds])
-      router.push(`/sessions/${id}`)
+      if (mode === 'ai') {
+        const selected = aiTopics.filter((t) => selectedIds.has(t.topicId))
+        const id = await createSession(
+          roadmapId,
+          minutes,
+          selected.map((t) => ({
+            topicId: t.topicId,
+            allocatedMinutes: t.allocatedMinutes,
+            subtasks: t.subtasks,
+          }))
+        )
+        router.push(`/sessions/${id}`)
+      } else {
+        const id = await createSession(
+          roadmapId,
+          minutes,
+          [...selectedIds].map((topicId) => ({ topicId, allocatedMinutes: 60, subtasks: [] }))
+        )
+        router.push(`/sessions/${id}`)
+      }
     } catch {
       setStarting(false)
     }
   }
-
-  const phases = manualTopics.reduce<Record<string, ManualTopic[]>>((acc, t) => {
-    if (!acc[t.phase]) acc[t.phase] = []
-    acc[t.phase].push(t)
-    return acc
-  }, {})
 
   if (roadmaps.length === 0) {
     return (
@@ -102,9 +128,7 @@ export function SessionPlanner({ roadmaps }: { roadmaps: Roadmap[] }) {
   return (
     <div className="space-y-6">
       <Card>
-        <CardHeader>
-          <CardTitle>Available time</CardTitle>
-        </CardHeader>
+        <CardHeader><CardTitle>Plan your session</CardTitle></CardHeader>
         <CardContent className="space-y-4">
           <div className="flex flex-wrap items-end gap-3">
             <div className="space-y-1">
@@ -115,18 +139,13 @@ export function SessionPlanner({ roadmaps }: { roadmaps: Roadmap[] }) {
                 onChange={(e) => { setRoadmapId(e.target.value); setMode(null) }}
                 disabled={loading}
               >
-                {roadmaps.map((r) => (
-                  <option key={r.id} value={r.id}>{r.title}</option>
-                ))}
+                {roadmaps.map((r) => <option key={r.id} value={r.id}>{r.title}</option>)}
               </select>
             </div>
             <div className="space-y-1">
               <label className="text-sm text-muted-foreground">Hours</label>
               <Input
-                type="number"
-                min={0.5}
-                max={8}
-                step={0.5}
+                type="number" min={1} max={8} step={0.5}
                 value={hours}
                 onChange={(e) => setHours(Number(e.target.value))}
                 className="w-24"
@@ -145,54 +164,56 @@ export function SessionPlanner({ roadmaps }: { roadmaps: Roadmap[] }) {
       </Card>
 
       {mode === 'ai' && !loading && aiTopics.length > 0 && (
-        <Card>
-          <CardHeader>
-            <CardTitle>AI plan — {minutes} min</CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-3">
-            {aiTopics.map((t) => (
-              <label key={t.topicId} className="flex items-start gap-3 cursor-pointer">
-                <input
-                  type="checkbox"
-                  className="mt-0.5"
-                  checked={selectedIds.has(t.topicId)}
-                  onChange={() => toggleTopic(t.topicId)}
-                />
-                <div>
-                  <div className="flex items-center gap-2">
-                    <span className="text-sm font-medium">{t.title}</span>
-                    <span className="text-xs text-muted-foreground">{t.estimatedMinutes} min</span>
+        <div className="space-y-3">
+          {aiTopics.map((t) => (
+            <Card key={t.topicId}>
+              <CardContent className="p-4 space-y-3">
+                <label className="flex items-start gap-3 cursor-pointer">
+                  <input
+                    type="checkbox"
+                    className="mt-0.5"
+                    checked={selectedIds.has(t.topicId)}
+                    onChange={() => toggleTopic(t.topicId)}
+                  />
+                  <div className="space-y-0.5">
+                    <p className="text-sm font-medium">{t.title}</p>
+                    <p className="text-xs text-muted-foreground">{t.sectionTitle} · {Math.round(t.allocatedMinutes / 60 * 10) / 10}h</p>
                   </div>
-                  <p className="text-xs text-muted-foreground">{t.reason}</p>
-                </div>
-              </label>
-            ))}
-          </CardContent>
-        </Card>
+                </label>
+                <ul className="space-y-2 pl-6">
+                  {t.subtasks.map((s, i) => (
+                    <li key={i} className="text-xs text-muted-foreground space-y-0.5">
+                      <p>{s.description}</p>
+                      {s.resourceUrl && (
+                        <a href={s.resourceUrl} target="_blank" rel="noopener noreferrer"
+                          className="text-xs underline text-foreground/70 hover:text-foreground">
+                          {s.resourceTitle ?? s.resourceUrl}
+                        </a>
+                      )}
+                    </li>
+                  ))}
+                </ul>
+              </CardContent>
+            </Card>
+          ))}
+        </div>
       )}
 
       {mode === 'manual' && !loading && (
         <Card>
-          <CardHeader>
-            <CardTitle>Select topics</CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-6">
-            {Object.entries(phases).map(([phase, pts]) => (
-              <div key={phase} className="space-y-2">
-                <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide">{phase}</p>
-                {pts.map((t) => (
-                  <label key={t.id} className="flex items-center gap-3 cursor-pointer">
-                    <input
-                      type="checkbox"
-                      checked={selectedIds.has(t.id)}
-                      onChange={() => toggleTopic(t.id)}
-                    />
-                    <span className={`text-sm ${t.isCompleted ? 'line-through text-muted-foreground' : ''}`}>
-                      {t.title}
-                    </span>
-                  </label>
-                ))}
-              </div>
+          <CardHeader><CardTitle>Select topics</CardTitle></CardHeader>
+          <CardContent className="space-y-4">
+            {manualTopics.map((t) => (
+              <label key={t.id} className="flex items-center gap-3 cursor-pointer">
+                <input
+                  type="checkbox"
+                  checked={selectedIds.has(t.id)}
+                  onChange={() => toggleTopic(t.id)}
+                />
+                <span className={`text-sm ${t.isCompleted ? 'line-through text-muted-foreground' : ''}`}>
+                  {t.sectionTitle} / {t.title}
+                </span>
+              </label>
             ))}
           </CardContent>
         </Card>
@@ -200,9 +221,7 @@ export function SessionPlanner({ roadmaps }: { roadmaps: Roadmap[] }) {
 
       {mode && !loading && selectedIds.size > 0 && (
         <Button onClick={startSession} disabled={starting}>
-          {starting
-            ? 'Starting…'
-            : `Start session (${selectedIds.size} topic${selectedIds.size > 1 ? 's' : ''})`}
+          {starting ? 'Starting…' : `Start session (${selectedIds.size} topic${selectedIds.size > 1 ? 's' : ''})`}
         </Button>
       )}
     </div>
