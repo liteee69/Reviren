@@ -23,6 +23,7 @@ export default function EndSessionPage({ params }: { params: Promise<{ id: strin
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const [saveError, setSaveError] = useState<string | null>(null)
 
   useEffect(() => {
     fetch('/api/sessions/end', {
@@ -43,6 +44,7 @@ export default function EndSessionPage({ params }: { params: Promise<{ id: strin
   }, [sessionId])
 
   async function handleConfirm() {
+    setSaveError(null)
     setSaving(true)
     try {
       await saveSessionProgress(
@@ -54,8 +56,9 @@ export default function EndSessionPage({ params }: { params: Promise<{ id: strin
         }))
       )
       router.push('/sessions')
-    } catch {
+    } catch (e) {
       setSaving(false)
+      setSaveError(e instanceof Error ? e.message : 'Failed to save progress')
     }
   }
 
@@ -114,6 +117,7 @@ export default function EndSessionPage({ params }: { params: Promise<{ id: strin
       <Button onClick={handleConfirm} disabled={saving}>
         {saving ? 'Saving…' : 'Confirm & save progress'}
       </Button>
+      {saveError && <p className="text-sm text-destructive">{saveError}</p>}
     </div>
   )
 }
