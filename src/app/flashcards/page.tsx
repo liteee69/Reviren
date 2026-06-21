@@ -1,7 +1,7 @@
 export const dynamic = 'force-dynamic'
 
 import { db } from '@/lib/db'
-import { flashcards, topics, roadmaps } from '@/lib/db/schema'
+import { flashcards, topics, roadmaps, roadmapPhases, sections } from '@/lib/db/schema'
 import { eq, asc, desc } from 'drizzle-orm'
 import { FlashcardsView } from './flashcards-view'
 
@@ -27,9 +27,11 @@ export default async function FlashcardsPage() {
       id: topics.id,
       title: topics.title,
       description: topics.description,
-      roadmapId: topics.roadmapId,
+      roadmapId: roadmapPhases.roadmapId,
     })
     .from(topics)
+    .innerJoin(sections, eq(sections.id, topics.sectionId))
+    .innerJoin(roadmapPhases, eq(roadmapPhases.id, sections.phaseId))
     .orderBy(asc(topics.order))
 
   return (

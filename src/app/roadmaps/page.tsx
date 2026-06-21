@@ -1,7 +1,7 @@
 export const dynamic = 'force-dynamic'
 
 import { db } from '@/lib/db'
-import { roadmaps, topics } from '@/lib/db/schema'
+import { roadmaps, roadmapPhases, sections, topics } from '@/lib/db/schema'
 import { eq, sql } from 'drizzle-orm'
 import { CreateRoadmap } from './create-roadmap'
 import { RoadmapCard } from './roadmap-card'
@@ -15,7 +15,9 @@ async function getRoadmaps() {
       topicCount: sql<number>`count(${topics.id})::int`,
     })
     .from(roadmaps)
-    .leftJoin(topics, eq(topics.roadmapId, roadmaps.id))
+    .leftJoin(roadmapPhases, eq(roadmapPhases.roadmapId, roadmaps.id))
+    .leftJoin(sections, eq(sections.phaseId, roadmapPhases.id))
+    .leftJoin(topics, eq(topics.sectionId, sections.id))
     .groupBy(roadmaps.id, roadmaps.title, roadmaps.description, roadmaps.createdAt)
     .orderBy(roadmaps.createdAt)
 }

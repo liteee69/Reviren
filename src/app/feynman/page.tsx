@@ -1,8 +1,8 @@
 export const dynamic = 'force-dynamic'
 
 import { db } from '@/lib/db'
-import { roadmaps, topics } from '@/lib/db/schema'
-import { asc } from 'drizzle-orm'
+import { roadmaps, roadmapPhases, sections, topics } from '@/lib/db/schema'
+import { asc, eq } from 'drizzle-orm'
 import { FeynmanReview } from './feynman-review'
 
 export default async function FeynmanPage() {
@@ -15,9 +15,11 @@ export default async function FeynmanPage() {
       id: topics.id,
       title: topics.title,
       description: topics.description,
-      roadmapId: topics.roadmapId,
+      roadmapId: roadmapPhases.roadmapId,
     })
     .from(topics)
+    .innerJoin(sections, eq(sections.id, topics.sectionId))
+    .innerJoin(roadmapPhases, eq(roadmapPhases.id, sections.phaseId))
     .orderBy(asc(topics.order))
 
   return (

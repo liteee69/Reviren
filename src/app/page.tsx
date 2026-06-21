@@ -6,7 +6,7 @@ import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { Progress } from '@/components/ui/progress'
 import { db } from '@/lib/db'
-import { roadmaps, topics, sessions, flashcards } from '@/lib/db/schema'
+import { roadmaps, roadmapPhases, sections, topics, sessions, flashcards } from '@/lib/db/schema'
 import { eq, sql, gte, desc } from 'drizzle-orm'
 
 export default async function DashboardPage() {
@@ -26,7 +26,9 @@ export default async function DashboardPage() {
         completedCount: sql<number>`count(${topics.id}) filter (where ${topics.isCompleted} = true)::int`,
       })
       .from(roadmaps)
-      .leftJoin(topics, eq(topics.roadmapId, roadmaps.id))
+      .leftJoin(roadmapPhases, eq(roadmapPhases.roadmapId, roadmaps.id))
+      .leftJoin(sections, eq(sections.phaseId, roadmapPhases.id))
+      .leftJoin(topics, eq(topics.sectionId, sections.id))
       .groupBy(roadmaps.id, roadmaps.title, roadmaps.createdAt)
       .orderBy(roadmaps.createdAt),
 

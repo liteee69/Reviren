@@ -224,38 +224,43 @@ export function CreateRoadmap() {
           </div>
 
           {roadmap.phases.map((phase) => (
-            <div key={phase.title} className="space-y-3">
+            <div key={phase.title} className="space-y-4">
               <h3 className="font-medium text-sm text-muted-foreground uppercase tracking-wide">
                 {phase.title}
               </h3>
-              <div className="grid gap-3 sm:grid-cols-2">
-                {phase.topics.map((topic) => (
-                  <Card key={topic.title}>
-                    <CardHeader className="pb-2">
-                      <CardTitle className="text-base">{topic.title}</CardTitle>
-                    </CardHeader>
-                    <CardContent className="space-y-3">
-                      <p className="text-sm text-muted-foreground">{topic.description}</p>
-                      {topic.resources.length > 0 && (
-                        <div className="space-y-1">
-                          {topic.resources.map((r, i) => (
-                            <a
-                              key={`${r.url}-${i}`}
-                              href={r.url}
-                              target="_blank"
-                              rel="noopener noreferrer"
-                              className="flex items-center gap-2 text-sm hover:underline"
-                            >
-                              <Badge variant="secondary" className="text-xs shrink-0">{r.type}</Badge>
-                              <span className="truncate">{r.title}</span>
-                            </a>
-                          ))}
-                        </div>
-                      )}
-                    </CardContent>
-                  </Card>
-                ))}
-              </div>
+              {phase.sections.map((section) => (
+                <div key={section.title} className="space-y-2">
+                  <p className="text-sm font-medium">{section.title}</p>
+                  <div className="grid gap-3 sm:grid-cols-2">
+                    {section.topics.map((topic) => (
+                      <Card key={topic.title}>
+                        <CardHeader className="pb-2">
+                          <CardTitle className="text-base">{topic.title}</CardTitle>
+                        </CardHeader>
+                        <CardContent className="space-y-3">
+                          <p className="text-sm text-muted-foreground">{topic.description}</p>
+                          {topic.resources.length > 0 && (
+                            <div className="space-y-1">
+                              {topic.resources.map((r, i) => (
+                                <a
+                                  key={`${r.url}-${i}`}
+                                  href={r.url}
+                                  target="_blank"
+                                  rel="noopener noreferrer"
+                                  className="flex items-center gap-2 text-sm hover:underline"
+                                >
+                                  <Badge variant="secondary" className="text-xs shrink-0">{r.type}</Badge>
+                                  <span className="truncate">{r.title}</span>
+                                </a>
+                              ))}
+                            </div>
+                          )}
+                        </CardContent>
+                      </Card>
+                    ))}
+                  </div>
+                </div>
+              ))}
             </div>
           ))}
         </div>
