@@ -8,6 +8,7 @@ import { Input } from '@/components/ui/input'
 import { Badge } from '@/components/ui/badge'
 import { saveRoadmap } from '@/app/actions/roadmap'
 import type { RoadmapOutput } from '@/lib/agent/roadmap-schema'
+import { formatContext } from '@/lib/agent/roadmap-context'
 
 const STEPS = [
   { node: 'searchTopics', label: 'Searching for curriculum structure...' },
@@ -17,7 +18,7 @@ const STEPS = [
   { node: 'formatOutput', label: 'Building your roadmap...' },
 ]
 
-type Status = 'idle' | 'generating' | 'importing' | 'done' | 'error'
+type Status = 'idle' | 'questioning' | 'followup' | 'generating' | 'importing' | 'done' | 'error'
 type Mode = 'generate' | 'import'
 
 export function CreateRoadmap() {
@@ -31,12 +32,70 @@ export function CreateRoadmap() {
   const [roadmap, setRoadmap] = useState<RoadmapOutput | null>(null)
   const [error, setError] = useState('')
   const [saving, setSaving] = useState(false)
+  const [questions, setQuestions] = useState<string[]>([])
+  const [answers, setAnswers] = useState('')
+  const [followUp, setFollowUp] = useState<string | null>(null)
+  const [followUpAnswer, setFollowUpAnswer] = useState('')
+  const [fetchingQuestions, setFetchingQuestions] = useState(false)
 
   function switchMode(next: Mode) {
     setMode(next)
     setStatus('idle')
     setRoadmap(null)
     setError('')
+    setQuestions([])
+    setAnswers('')
+    setFollowUp(null)
+    setFollowUpAnswer('')
+  }
+
+  async function startQuestioning() {
+    if (!topic.trim()) return
+    setFetchingQuestions(true)
+    setStatus('idle')
+    setError('')
+    try {
+      const res = await fetch('/api/roadmap/questions', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ topic }),
+      })
+      const data = await res.json()
+      if (!res.ok || data.error) throw new Error(data.error ?? 'Failed to load questions')
+      setQuestions(data.questions)
+      setAnswers('')
+      setStatus('questioning')
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Something went wrong')
+    } finally {
+      setFetchingQuestions(false)
+    }
+  }
+
+  async function submitAnswers() {
+    if (!answers.trim()) return
+    setFetchingQuestions(true)
+    try {
+      const res = await fetch('/api/roadmap/questions/followup', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ topic, questions, answers }),
+      })
+      const data = await res.json()
+      if (!res.ok || data.error) throw new Error(data.error ?? 'Failed')
+      if (data.followUp) {
+        setFollowUp(data.followUp)
+        setFollowUpAnswer('')
+        setStatus('followup')
+      } else {
+        setFollowUp(null)
+        setStatus('followup') // no follow-up, but advance to show Generate button
+      }
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Something went wrong')
+    } finally {
+      setFetchingQuestions(false)
+    }
   }
 
   async function generate() {
@@ -47,11 +106,15 @@ export function CreateRoadmap() {
     setError('')
     setCurrentLabel(STEPS[0].label)
 
+    const context = questions.length > 0
+      ? formatContext(questions, answers, followUp, followUpAnswer || undefined)
+      : ''
+
     try {
       const res = await fetch('/api/roadmap/generate', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ topic }),
+        body: JSON.stringify({ topic, context }),
       })
 
       if (!res.ok || !res.body) throw new Error('Request failed')
@@ -155,7 +218,7 @@ export function CreateRoadmap() {
     }
   }
 
-  const busy = status === 'generating' || status === 'importing'
+  const busy = status === 'generating' || status === 'importing' || fetchingQuestions
 
   return (
     <div className="space-y-6">
@@ -186,11 +249,14 @@ export function CreateRoadmap() {
                 placeholder="e.g. robotics, distributed systems…"
                 value={topic}
                 onChange={e => setTopic(e.target.value)}
-                onKeyDown={e => e.key === 'Enter' && !busy && generate()}
-                disabled={busy}
+                onKeyDown={e => e.key === 'Enter' && !busy && status === 'idle' && startQuestioning()}
+                disabled={busy || status !== 'idle'}
               />
-              <Button onClick={generate} disabled={busy || !topic.trim()}>
-                {status === 'generating' ? 'Generating…' : 'Generate'}
+              <Button
+                onClick={startQuestioning}
+                disabled={busy || !topic.trim() || status !== 'idle'}
+              >
+                {fetchingQuestions ? 'Loading…' : 'Generate'}
               </Button>
             </div>
           ) : (
@@ -224,6 +290,63 @@ export function CreateRoadmap() {
           )}
         </CardContent>
       </Card>
+
+      {(status === 'questioning' || status === 'followup') && (
+        <div className="space-y-4">
+          {/* AI message bubble */}
+          <div className="rounded-lg border border-border bg-muted/40 p-4 text-sm space-y-2">
+            <p className="text-muted-foreground font-medium text-xs uppercase tracking-wide">Before generating</p>
+            <ol className="space-y-1 list-decimal list-inside">
+              {questions.map((q, i) => (
+                <li key={i}>{q}</li>
+              ))}
+            </ol>
+          </div>
+
+          {/* User answer — only editable in questioning state */}
+          <textarea
+            placeholder="Type your answers here…"
+            value={answers}
+            onChange={e => setAnswers(e.target.value)}
+            disabled={status !== 'questioning' || fetchingQuestions}
+            rows={4}
+            className="w-full rounded-md border border-border bg-transparent px-3 py-2 text-sm focus:outline-none focus:border-foreground resize-none disabled:opacity-50"
+          />
+
+          {status === 'questioning' && (
+            <Button
+              onClick={submitAnswers}
+              disabled={!answers.trim() || fetchingQuestions}
+            >
+              {fetchingQuestions ? 'Checking…' : 'Next →'}
+            </Button>
+          )}
+
+          {/* Follow-up exchange */}
+          {status === 'followup' && followUp && (
+            <div className="space-y-3">
+              <div className="rounded-lg border border-border bg-muted/40 p-4 text-sm">
+                <p className="text-muted-foreground font-medium text-xs uppercase tracking-wide mb-2">One more thing</p>
+                <p>{followUp}</p>
+              </div>
+              <textarea
+                placeholder="Your answer…"
+                value={followUpAnswer}
+                onChange={e => setFollowUpAnswer(e.target.value)}
+                rows={2}
+                className="w-full rounded-md border border-border bg-transparent px-3 py-2 text-sm focus:outline-none focus:border-foreground resize-none"
+              />
+              <Button onClick={generate} disabled={!followUpAnswer.trim()}>
+                Generate Roadmap
+              </Button>
+            </div>
+          )}
+
+          {status === 'followup' && !followUp && (
+            <Button onClick={generate}>Generate Roadmap</Button>
+          )}
+        </div>
+      )}
 
       {status === 'generating' && (
         <div className="space-y-2 px-1">
