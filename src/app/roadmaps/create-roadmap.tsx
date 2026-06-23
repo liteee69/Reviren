@@ -47,6 +47,7 @@ export function CreateRoadmap() {
     setAnswers('')
     setFollowUp(null)
     setFollowUpAnswer('')
+    setFetchingQuestions(false)
   }
 
   async function startQuestioning() {
@@ -67,6 +68,7 @@ export function CreateRoadmap() {
       setStatus('questioning')
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Something went wrong')
+      setStatus('error')
     } finally {
       setFetchingQuestions(false)
     }
@@ -93,6 +95,7 @@ export function CreateRoadmap() {
       }
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Something went wrong')
+      setStatus('error')
     } finally {
       setFetchingQuestions(false)
     }
