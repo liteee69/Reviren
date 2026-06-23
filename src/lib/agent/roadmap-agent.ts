@@ -6,6 +6,7 @@ import { RoadmapOutputSchema, type RoadmapOutput } from './roadmap-schema'
 
 const State = Annotation.Root({
   topic: Annotation<string>,
+  context: Annotation<string>,
   topicSearchResults: Annotation<string>,
   domains: Annotation<string[]>,
   theoryCandidates: Annotation<SearchResult[]>,
@@ -93,7 +94,7 @@ Include 6–8 options per category, ordered best-first. Exclude anything behind 
 async function formatOutput(state: typeof State.State) {
   const structured = roadmapModel.withStructuredOutput(RoadmapOutputSchema)
 
-  const prompt = `You are a learning roadmap expert. Based on the research below, create a detailed, opinionated learning roadmap for: "${state.topic}".
+  const prompt = `You are a learning roadmap expert. Based on the research below, create a detailed, opinionated learning roadmap for: "${state.topic}".${state.context ? `\n\n${state.context}` : ''}
 
 ## Topic research:
 ${state.topicSearchResults}
@@ -147,11 +148,11 @@ const nodeLabels: Record<string, string> = {
   formatOutput: 'Building your roadmap...',
 }
 
-export async function* runRoadmapAgent(topic: string) {
+export async function* runRoadmapAgent(topic: string, context = '') {
   let roadmap: RoadmapOutput | null = null
 
   const stream = graph.streamEvents(
-    { topic, topicSearchResults: '', domains: [], theoryCandidates: [], practiceCandidates: [], verifiedResources: '', roadmap: null },
+    { topic, context, topicSearchResults: '', domains: [], theoryCandidates: [], practiceCandidates: [], verifiedResources: '', roadmap: null },
     { version: 'v2' }
   )
 

@@ -5,18 +5,19 @@ export const runtime = 'nodejs'
 export const dynamic = 'force-dynamic'
 
 export async function POST(req: NextRequest) {
-  const { topic } = await req.json()
+  const { topic, context } = await req.json()
 
   if (!topic || typeof topic !== 'string' || topic.trim().length === 0) {
     return new Response('Missing topic', { status: 400 })
   }
+  const ctx = typeof context === 'string' ? context : ''
 
   const encoder = new TextEncoder()
 
   const stream = new ReadableStream({
     async start(controller) {
       try {
-        for await (const event of runRoadmapAgent(topic.trim())) {
+        for await (const event of runRoadmapAgent(topic.trim(), ctx)) {
           const data = `data: ${JSON.stringify(event)}\n\n`
           controller.enqueue(encoder.encode(data))
         }
