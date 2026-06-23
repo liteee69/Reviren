@@ -11,7 +11,9 @@ import type { RoadmapOutput } from '@/lib/agent/roadmap-schema'
 
 const STEPS = [
   { node: 'searchTopics', label: 'Searching for curriculum structure...' },
-  { node: 'structureAndEnrich', label: 'Finding resources...' },
+  { node: 'findTheoryResources', label: 'Finding theory resources...' },
+  { node: 'findPracticeResources', label: 'Finding practice resources...' },
+  { node: 'verifyResources', label: 'Verifying resource quality...' },
   { node: 'formatOutput', label: 'Building your roadmap...' },
 ]
 
@@ -57,6 +59,7 @@ export function CreateRoadmap() {
       const reader = res.body.getReader()
       const decoder = new TextDecoder()
       let buffer = ''
+      const completed: string[] = []
 
       while (true) {
         const { done, value } = await reader.read()
@@ -80,8 +83,9 @@ export function CreateRoadmap() {
             setRoadmap(event.roadmap)
             setStatus('done')
           } else {
-            setCompletedSteps(prev => [...prev, event.node])
-            const nextStep = STEPS.find(s => !completedSteps.includes(s.node) && s.node !== event.node)
+            completed.push(event.node)
+            setCompletedSteps([...completed])
+            const nextStep = STEPS.find(s => !completed.includes(s.node) && s.node !== event.node)
             if (nextStep) setCurrentLabel(nextStep.label)
           }
         }

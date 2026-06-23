@@ -14,11 +14,14 @@ export function AddTopic({ sectionId }: { sectionId: string }) {
   async function save() {
     if (!title.trim()) return
     setSaving(true)
-    await addTopic(sectionId, title.trim(), description.trim())
-    setTitle('')
-    setDescription('')
-    setOpen(false)
-    setSaving(false)
+    try {
+      await addTopic(sectionId, title.trim(), description.trim())
+      setTitle('')
+      setDescription('')
+      setOpen(false)
+    } finally {
+      setSaving(false)
+    }
   }
 
   if (!open) {

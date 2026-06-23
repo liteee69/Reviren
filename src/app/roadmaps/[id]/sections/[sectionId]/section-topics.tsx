@@ -3,6 +3,7 @@
 import { useState } from 'react'
 import { Card, CardContent } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
+import { Progress } from '@/components/ui/progress'
 import { AddTopic } from '@/app/roadmaps/[id]/add-topic'
 import { deleteTopic } from '@/app/actions/topic'
 
@@ -26,8 +27,11 @@ export function SectionTopics({
 
   async function handleDelete(id: string) {
     setDeleting(id)
-    await deleteTopic(id)
-    setDeleting(null)
+    try {
+      await deleteTopic(id)
+    } finally {
+      setDeleting(null)
+    }
   }
 
   return (
@@ -60,12 +64,7 @@ export function SectionTopics({
                 </Button>
               </div>
             </div>
-            <div className="h-1 w-full rounded-full bg-muted overflow-hidden">
-              <div
-                className="h-full rounded-full bg-foreground transition-all"
-                style={{ width: `${topic.progress}%` }}
-              />
-            </div>
+            <Progress value={topic.progress} />
           </CardContent>
         </Card>
       ))}

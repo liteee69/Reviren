@@ -3,7 +3,7 @@
 import { revalidatePath } from 'next/cache'
 import { db } from '@/lib/db'
 import { sessions, sessionTopics, subtasks, topics } from '@/lib/db/schema'
-import { eq } from 'drizzle-orm'
+import { and, eq, isNull } from 'drizzle-orm'
 import { clampDelta } from '@/lib/progress'
 
 type SubtaskInput = {
@@ -68,8 +68,13 @@ export async function saveSessionProgress(
   sessionId: string,
   deltas: Array<{ sessionTopicId: string; topicId: string; delta: number }>
 ) {
-  const [existingSession] = await db.select({ endedAt: sessions.endedAt }).from(sessions).where(eq(sessions.id, sessionId))
-  if (existingSession?.endedAt) return
+  // Atomic guard: claim endedAt only if still null — prevents double-saves on concurrent calls
+  const [claimed] = await db
+    .update(sessions)
+    .set({ endedAt: new Date() })
+    .where(and(eq(sessions.id, sessionId), isNull(sessions.endedAt)))
+    .returning({ id: sessions.id })
+  if (!claimed) return
 
   for (const { sessionTopicId, topicId, delta } of deltas) {
     const [topic] = await db.select({ progress: topics.progress }).from(topics).where(eq(topics.id, topicId))
@@ -79,8 +84,6 @@ export async function saveSessionProgress(
     await db.update(topics).set({ progress: newProgress, isCompleted: newProgress >= 100 }).where(eq(topics.id, topicId))
     await db.update(sessionTopics).set({ progressDelta: delta }).where(eq(sessionTopics.id, sessionTopicId))
   }
-
-  await db.update(sessions).set({ endedAt: new Date() }).where(eq(sessions.id, sessionId))
   revalidatePath('/sessions')
   revalidatePath('/roadmaps')
 }

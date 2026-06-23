@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation'
 import { Card, CardContent } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
+import { Progress } from '@/components/ui/progress'
 import { saveSessionProgress } from '@/app/actions/session'
 
 type Delta = {
@@ -102,12 +103,7 @@ export default function EndSessionPage({ params }: { params: Promise<{ id: strin
                   />
                   <span className="text-xs text-muted-foreground">%</span>
                 </div>
-                <div className="h-1.5 w-full rounded-full bg-muted overflow-hidden">
-                  <div
-                    className="h-full rounded-full bg-foreground transition-all"
-                    style={{ width: `${newProgress}%` }}
-                  />
-                </div>
+                <Progress value={newProgress} />
               </CardContent>
             </Card>
           )

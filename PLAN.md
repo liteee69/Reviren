@@ -98,5 +98,84 @@ All go into `.env.local` (and Vercel env vars for deploy).
 12. Music player — YouTube iframe embed
 13. Dashboard — roadmap list, progress summary, last session
 
+## Roadmap Quality — Planned Features (Step 15+)
+
+Decisions locked through brainstorming on 2026-06-23. Not yet planned for build order.
+
+### Feature 1: Pre-generation Questions Layer
+A conversational flow (chat-like, not a form) that runs before roadmap generation starts.
+
+**Flow:**
+1. User types a topic → agent classifies domain (STEM, humanities, professional, creative, language, etc.)
+2. Agent asks 3–5 high-leverage, domain-adaptive questions in 1–2 messages:
+   - **Goal type** — exam prep / career switch / hobby / university prep (shapes entire structure)
+   - **Prior knowledge** — self-rated 0–3 per relevant sub-domain; agent skips or compresses covered areas
+   - **Time budget** — hours/day + total weeks; agent calibrates topic density and phase count
+   - **Topics to cover** — any specific topics the user wants included; agent places them correctly in sequence and warns if prerequisites are missing
+   - **Sources to attach** — URLs or resource names; agent classifies as primary resources (fold into topics) vs curriculum to match (shape phase structure)
+3. One targeted follow-up if any answer opens a meaningful branch (e.g., "exam prep" → "which exam?")
+4. Agent generates roadmap with all answers woven into the prompt
+
+**Domain-adaptive question examples:**
+- STEM/Engineering → "do you have any hardware?" / "are you targeting a specific framework or language?"
+- Law → "are you studying for a specific exam (bar, LSAT)?" / "which jurisdiction?"
+- Biology/Chemistry → "do you have lab access, or is this purely theoretical?"
+- Language → "what's your current level and target use case (travel, business, fluency)?"
+
+**UX state machine change:** `idle → questioning → generating → preview → saved` (currently skips questioning)
+
+---
+
+### Feature 2: Phase Exams (On-Demand, Multiple Choice)
+
+Generated on demand when the user finishes a phase and clicks "Take Phase Exam" — not pre-built at roadmap creation time.
+
+**Generation:** Agent receives the phase's topic list + any Feynman review data from that phase → generates 10–20 multiple choice questions with plausible distractors (wrong answers that reflect real misconceptions, not obviously wrong). Generation prompt must explicitly require high-quality distractors.
+
+**Phase-level only** for now — no per-topic quizzes yet.
+
+**Optional** — user is not blocked from the next phase. May migrate to required later.
+
+**After exam:** Show score + correct answers with explanations + flag weak topics. Weak topics surface in the next session plan (requires session planner to read exam results — **deferred design decision**, note below).
+
+**DB change needed:** New `phase_exams` table — `id`, `phase_id`, `questions` (JSONB array of `{question, options[4], correctIndex, explanation}`), `created_at`. New `exam_attempts` table — `id`, `exam_id`, `answers` (JSONB), `score`, `taken_at`.
+
+**Migration path:** Multiple choice → free-response (requires AI scoring step, similar to Feynman but for structured questions).
+
+---
+
+### Feature 3: Mid-Roadmap Project
+
+A dedicated project phase auto-placed after the foundations boundary (detected by the agent — not a fixed phase number).
+
+**Generation flow:**
+1. After building the topic tree, agent identifies the phase where foundational skills are complete and advanced topics begin
+2. Agent generates 3 project options appropriate to the domain (small / medium / ambitious scope):
+   - STEM/Engineering → build something, implement an algorithm, run an experiment
+   - Biology/Chemistry → literature review + experimental design
+   - Law → mock case brief or hypothetical analysis
+   - Psychology → case study or research proposal
+   - Creative → portfolio piece or original work
+   - Language → translate a real text, write an essay, recorded conversation
+   - Business/Finance → financial model or market analysis
+3. User picks one or names their own
+4. Agent scaffolds the project into 4–8 ordered milestones, each mapped to roadmap skills it exercises + project-specific resources (starter templates, datasets, tools — different from topic resources)
+
+**Milestone structure:** Week-level (coarser than session subtasks). Each milestone: title, goal sentence, skills exercised, suggested resources.
+
+**In the roadmap:** Project appears as a dedicated phase (e.g., "Phase 3: Project — Hand Gesture Robot") with milestones instead of sections/topics.
+
+---
+
+## Deferred / optional
+
+- **Import resource augmentation** — after parsing a .md import, run targeted web searches for topics that have no resources and attach verified results. Not worth it for user-curated files (resources are intentional); useful as an optional "enrich" action post-import. Would reuse `searchWebRaw` + `fetchPages` + the verify prompt from the agent pipeline, scoped only to empty-resource topics.
+
+- **Exam results → session planning feedback loop** — if the user scores poorly on specific topics in a phase exam, the session planner reads those weak spots and reprioritizes them in the next session. Requires session planner to query `exam_attempts` and factor weak topics alongside uncovered topics. Discuss before building.
+
+- **Project milestones in session planner** — when the active roadmap phase is a project phase, the session planner operates on milestones instead of topics. User selects milestones to work on in the session; completion tracking is milestone-based. Currently session planner is topic-only; this is a meaningful change. Discuss before building.
+
+- **Gap audit node in roadmap agent** — after `formatOutput`, run a `gapAudit` node that checks the generated roadmap against a domain-specific checklist (for robotics: IMU, control theory, simulation, wireless comms, state machines, edge deployment) and injects missing topics. Requires per-domain checklists. High value for technical domains.
+
 ## What "done" looks like for v1
 A working personal study app used daily for a robotics/AI self-learning journey: session planning works end-to-end, the roadmap agent produces accurate and usable roadmaps, Feynman review gives honest and useful feedback, deployed on Vercel — on a codebase ready to add auth and multi-user without a rewrite.

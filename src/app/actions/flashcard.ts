@@ -6,18 +6,24 @@ import { flashcards } from '@/lib/db/schema'
 import { eq } from 'drizzle-orm'
 
 export async function createCard(front: string, back: string, topicId?: string) {
-  await db.insert(flashcards).values({ front, back, topicId: topicId ?? null })
+  const [card] = await db
+    .insert(flashcards)
+    .values({ front, back, topicId: topicId ?? null })
+    .returning({ id: flashcards.id })
   revalidatePath('/flashcards')
+  return card.id
 }
 
 export async function saveGeneratedCards(
   cards: { front: string; back: string }[],
   topicId?: string
 ) {
-  await db.insert(flashcards).values(
-    cards.map((c) => ({ front: c.front, back: c.back, topicId: topicId ?? null }))
-  )
+  const created = await db
+    .insert(flashcards)
+    .values(cards.map((c) => ({ front: c.front, back: c.back, topicId: topicId ?? null })))
+    .returning({ id: flashcards.id })
   revalidatePath('/flashcards')
+  return created.map((c) => c.id)
 }
 
 export async function toggleKnown(id: string, isKnown: boolean) {

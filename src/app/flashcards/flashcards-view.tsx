@@ -62,11 +62,11 @@ export function FlashcardsView({
   async function handleCreate() {
     if (!createFront.trim() || !createBack.trim()) return
     setCreating(true)
-    await createCard(createFront.trim(), createBack.trim(), createTopicId || undefined)
+    const id = await createCard(createFront.trim(), createBack.trim(), createTopicId || undefined)
     setCards((prev) => [
       ...prev,
       {
-        id: crypto.randomUUID(),
+        id,
         front: createFront.trim(),
         back: createBack.trim(),
         isKnown: false,
@@ -106,11 +106,11 @@ export function FlashcardsView({
     const topic = topics.find((t) => t.id === genTopicId)
     const toSave = generatedCards.filter((_, i) => selectedGen.has(i))
     setSaving(true)
-    await saveGeneratedCards(toSave, genTopicId || undefined)
+    const ids = await saveGeneratedCards(toSave, genTopicId || undefined)
     setCards((prev) => [
       ...prev,
-      ...toSave.map((c) => ({
-        id: crypto.randomUUID(),
+      ...toSave.map((c, i) => ({
+        id: ids[i],
         front: c.front,
         back: c.back,
         isKnown: false,

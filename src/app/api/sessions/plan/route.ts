@@ -24,15 +24,12 @@ const SessionPlanTopicSchema = z.object({
 })
 
 const SessionPlanSchema = z.object({
-  topics: z.preprocess(
-    (val) => (typeof val === 'string' ? JSON.parse(val) : val),
-    z.array(SessionPlanTopicSchema).min(1).max(4)
-  ),
+  topics: z.array(SessionPlanTopicSchema).min(1).max(4),
 })
 
 export async function POST(req: NextRequest) {
   const { roadmapId, hours } = await req.json()
-  if (!roadmapId || !hours) {
+  if (!roadmapId || hours == null) {
     return NextResponse.json({ error: 'Missing params' }, { status: 400 })
   }
 
@@ -100,8 +97,8 @@ export async function POST(req: NextRequest) {
   const topicsText = allTopics
     .map((t) => {
       const resources = Array.isArray(t.resources)
-        ? (t.resources as Array<{ title: string; url: string; type: string }>)
-            .map((r) => `    - [${r.type}] ${r.title}: ${r.url}`)
+        ? (t.resources as Array<{ title: string; url: string; type: string; purpose: string }>)
+            .map((r) => `    - [${r.type}/${r.purpose}] ${r.title}: ${r.url}`)
             .join('\n')
         : '    (none)'
       return [
@@ -130,7 +127,8 @@ Your job:
 6. Pair foundational topics with applied ones when possible (theory + practice in same session)
 7. For each topic, generate 3–5 concrete subtasks that describe exactly what to do during that time block
 8. For each subtask, attach a resource from the topic's resource list when relevant (use title and url from the list above). Leave resourceTitle and resourceUrl null if no relevant resource exists.
-9. Subtask descriptions must be specific actions, not vague goals. Good: "Watch the 3Blue1Brown linear algebra series episode on matrix multiplication (link in resources)". Bad: "Study linear algebra".
+9. Subtask descriptions must be specific actions directly tied to the topic's own content and resources. Do NOT invent cross-domain tasks (e.g. no Python/NumPy practice in a theory topic unless its own resources explicitly include coding exercises). Good: "Watch the 3Blue1Brown linear algebra series episode on matrix multiplication". Bad: "Implement matrix multiplication in NumPy" (if this topic has no coding resources).
+10. sectionTitle must be ONLY the section name (e.g. "Mathematics"), not a full breadcrumb path. Never include the phase title in sectionTitle.
 
 Return a JSON object matching the schema exactly.`
 

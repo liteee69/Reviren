@@ -4,12 +4,13 @@ export const ResourceSchema = z.object({
   title: z.string(),
   url: z.string(),
   type: z.enum(['video', 'article', 'course', 'book', 'documentation']),
+  purpose: z.enum(['theory', 'practice']),
 })
 
 export const TopicSchema = z.object({
   title: z.string(),
   description: z.string(),
-  resources: z.array(ResourceSchema),
+  resources: z.array(ResourceSchema).max(2),
 })
 
 export const SectionSchema = z.object({
