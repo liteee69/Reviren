@@ -105,9 +105,8 @@ ${state.verifiedResources}
 ## Step 1 — Structure (do this first, ignore resources entirely)
 Build the topic tree:
 - 3–5 phases with week ranges in the title (e.g. "Phase 1: Foundations (Weeks 1–3)")
-- Each phase has 2–4 sections grouped by subject domain (e.g. "Mathematics", "Programming", "Electronics")
-- Each section has 3–6 atomic, specific topics ordered from fundamental to advanced
-- A topic is ONE concrete skill or concept — never merge multiple distinct skills into one topic. Bad: "Linear Algebra and Calculus". Good: "Vectors and Matrix Operations", "Derivatives and Gradients" as separate topics.
+- Each phase has 2–4 sections. Section names must be short, standard subject-area names (1–3 words). Good: "Mathematics", "Physics & Electronics", "Python", "C++", "ROS 2". Bad: "Essential Mathematics", "Basic Electronics & Arduino", "Machine Learning Foundations".
+- Each section has 3–8 topics. Topic names must be standard textbook/chapter names (1–4 words) — the kind you would see on a university syllabus. Good: "Linear Algebra", "Calculus", "OOP in Python", "PID Control", "Kalman Filter". Bad: "Vectors and Matrix Operations", "Derivatives and Gradients", "Object-Oriented Programming (OOP) in Python".
 - A roadmap for a broad subject like robotics should have 40–80 topics total across all phases
 - Descriptions explain WHY this topic matters, not just what it is
 
