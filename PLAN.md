@@ -1,6 +1,19 @@
 # Reviren — Plan
 
-> **Status (2026-06-21):** All 13 original steps complete + step 14 (sections, progress, session overhaul) complete. App fully functional.
+> **Status (2026-06-24):** Steps 1–14 complete + Step 15 (pre-generation questions) complete. Next: Feature 2 (Phase Exams).
+> - ✅ 1–14. (see history below)
+> - ✅ 15. Pre-generation questions layer — chat-style Q&A (3–5 domain-adaptive questions + optional follow-up) before roadmap generation; context injected into `formatOutput` prompt. Haiku for questions, Sonnet for roadmap agent (switched from Gemini Pro 2026-06-24 due to API instability — may revert).
+>
+> **Model config (2026-06-24):** Roadmap agent → Sonnet 4.6; Questions/follow-up → Haiku 4.5; Session/Feynman → Sonnet 4.6; Flashcards → Gemini Flash.
+>
+> **Known issues:** Resource deduplication in roadmap agent — `verifyResources` sometimes returns generic "best of" articles, causing the same URL to be reused across unrelated topics (14 unique URLs vs 92 in a well-generated roadmap). Root cause: Tavily search result quality varies by run. Fix deferred.
+>
+> **Anthropic + LangGraph compatibility notes (for future model switches):**
+> - `withStructuredOutput` breaks inside LangGraph `streamEvents` for Anthropic (tool calling conflicts with streaming capture) → fix: direct `invoke` + regex JSON extraction in `formatOutput`
+> - `result.content` is `[{type:'text',text:'...'}]` array for Anthropic, not a string → fix: `extractTextContent()` helper in `roadmap-agent.ts`
+> - `ChatAnthropic` defaults `maxTokens` to 1024 — too low for roadmap JSON → set `maxTokens: 16000`
+>
+> **Step history:**
 > - ✅ 1. Project setup — Next.js 16 + Tailwind v4 + shadcn/ui + Supabase + Drizzle + LangChain model wrappers + env vars
 > - ✅ 2. Drizzle schema + migration — roadmaps, topics, sessions, session_topics, feynman_reviews, flashcards
 > - ✅ 3. Roadmap agent — LangGraph.js graph (Gemini 3.1 Pro + Tavily) with SSE streaming
