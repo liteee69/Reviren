@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { z } from 'zod'
-import { roadmapModel } from '@/lib/ai'
+import { flashcardModel } from '@/lib/ai'
 import { HumanMessage } from '@langchain/core/messages'
 
 export const runtime = 'nodejs'
@@ -35,7 +35,7 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: 'Missing topic' }, { status: 400 })
   }
 
-  const structured = roadmapModel.withStructuredOutput(QuestionsSchema)
+  const structured = flashcardModel.withStructuredOutput(QuestionsSchema)
   const result = await structured.invoke([new HumanMessage(QUESTIONS_PROMPT(topic))])
 
   return NextResponse.json({ questions: result.questions })
