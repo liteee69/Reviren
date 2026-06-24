@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { z } from 'zod'
-import { flashcardModel } from '@/lib/ai'
+import { haiku } from '@/lib/ai'
 import { HumanMessage } from '@langchain/core/messages'
 
 export const runtime = 'nodejs'
@@ -38,7 +38,7 @@ Good follow-up triggers:
 Return { "followUp": "..." } if a follow-up is warranted, or { "followUp": null } if answers are clear enough.
 One follow-up only — never more. Keep it short and conversational.`
 
-  const structured = flashcardModel.withStructuredOutput(FollowUpSchema)
+  const structured = haiku.withStructuredOutput(FollowUpSchema)
   const result = await structured.invoke([new HumanMessage(prompt)])
 
   return NextResponse.json({ followUp: result.followUp })
