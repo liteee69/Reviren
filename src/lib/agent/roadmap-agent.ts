@@ -103,8 +103,6 @@ Include 6–8 options per category, ordered best-first. Exclude anything behind 
 }
 
 async function formatOutput(state: typeof State.State) {
-  const structured = roadmapModel.withStructuredOutput(RoadmapOutputSchema)
-
   const prompt = `You are a learning roadmap expert. Based on the research below, create a detailed, opinionated learning roadmap for: "${state.topic}".${state.context ? `\n\n${state.context}` : ''}
 
 ## Topic research:
@@ -128,10 +126,17 @@ For each topic, assign resources from the verified list above:
 - If no verified resource fits a topic precisely, use the closest match from the list — it is acceptable for multiple related topics to share the same resource URL
 - Never invent URLs — only use URLs from the verified list above
 - Set purpose: "theory" or "practice" accordingly
-- Set type: "video" for YouTube/video content, "course" for structured courses, "book" for books/textbooks, "article" for written guides/docs, "documentation" for official reference docs`
+- Set type: "video" for YouTube/video content, "course" for structured courses, "book" for books/textbooks, "article" for written guides/docs, "documentation" for official reference docs
 
-  const result = await structured.invoke([new HumanMessage(prompt)])
-  return { roadmap: result }
+Return ONLY a valid JSON object with no markdown, no explanation, matching this exact structure:
+{"title":"...","description":"...","phases":[{"title":"...","sections":[{"title":"...","topics":[{"title":"...","description":"...","resources":[{"title":"...","url":"...","type":"video|article|course|book|documentation","purpose":"theory|practice"}]}]}]}]}`
+
+  const result = await roadmapModel.invoke([new HumanMessage(prompt)])
+  const text = extractTextContent(result.content)
+  const match = text.match(/\{[\s\S]*\}/)
+  if (!match) throw new Error('No JSON found in model response')
+  const parsed = JSON.parse(match[0])
+  return { roadmap: RoadmapOutputSchema.parse(parsed) }
 }
 
 const graph = new StateGraph(State)
