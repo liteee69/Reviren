@@ -128,9 +128,7 @@ For each topic, assign resources from the verified list above:
 - If no verified resource fits a topic precisely, use the closest match from the list — it is acceptable for multiple related topics to share the same resource URL
 - Never invent URLs — only use URLs from the verified list above
 - Set purpose: "theory" or "practice" accordingly
-- Set type: "video" for YouTube/video content, "course" for structured courses, "book" for books/textbooks, "article" for written guides/docs, "documentation" for official reference docs
-
-Respond with valid JSON only, matching the schema exactly`
+- Set type: "video" for YouTube/video content, "course" for structured courses, "book" for books/textbooks, "article" for written guides/docs, "documentation" for official reference docs`
 
   const result = await structured.invoke([new HumanMessage(prompt)])
   return { roadmap: result }
