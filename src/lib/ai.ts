@@ -5,6 +5,7 @@ import { ChatGoogleGenerativeAI } from '@langchain/google-genai'
 export const roadmapModel = new ChatAnthropic({
   model: 'claude-sonnet-4-6',
   apiKey: process.env.ANTHROPIC_API_KEY,
+  maxTokens: 16000,
 })
 
 // Session planning + Feynman scoring — honest judgment

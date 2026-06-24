@@ -15,6 +15,17 @@ const State = Annotation.Root({
   roadmap: Annotation<RoadmapOutput | null>,
 })
 
+function extractTextContent(content: unknown): string {
+  if (typeof content === 'string') return content
+  if (Array.isArray(content)) {
+    return content
+      .filter((c: { type?: string }) => c.type === 'text')
+      .map((c: { text?: string }) => c.text ?? '')
+      .join('')
+  }
+  return ''
+}
+
 async function extractDomains(topicResearch: string, topic: string): Promise<string[]> {
   const result = await roadmapModel.invoke([new HumanMessage(
     `From this learning roadmap research for "${topic}", list the 6-10 key subject domains that need dedicated learning resources.\n` +
@@ -22,7 +33,7 @@ async function extractDomains(topicResearch: string, topic: string): Promise<str
     `Research:\n${topicResearch.slice(0, 3000)}`
   )])
   try {
-    const content = typeof result.content === 'string' ? result.content : ''
+    const content = extractTextContent(result.content)
     const match = content.match(/\[[\s\S]*?\]/)
     return match ? JSON.parse(match[0]) : [topic]
   } catch {
@@ -88,7 +99,7 @@ PRACTICE:
 Include 6–8 options per category, ordered best-first. Exclude anything behind a paywall or with thin content.`
 
   const result = await roadmapModel.invoke([new HumanMessage(verificationPrompt)])
-  return { verifiedResources: typeof result.content === 'string' ? result.content : '' }
+  return { verifiedResources: extractTextContent(result.content) }
 }
 
 async function formatOutput(state: typeof State.State) {
