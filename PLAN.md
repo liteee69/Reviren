@@ -1,6 +1,8 @@
 # Reviren — Plan
 
-> **Status (2026-06-24):** Steps 1–14 complete + Step 15 (pre-generation questions) complete. Next: Feature 2 (Phase Exams).
+> **Checkpoint (2026-10-28):** The owner requested committing and publishing the existing local changes and 14 unpushed commits on `main`. This checkpoint includes structure-first roadmap generation with section-level resource selection and topic fallbacks, filtered resource search, the server-only data-access migration and RLS schema flags, diagnostic scripts, and the saved pre-generation Q&A plan. Verification: 10/10 unit tests, TypeScript, production build, and lint for the changed source files pass. Full-project lint still reports 5 errors and 2 warnings; all error locations are unchanged from `origin/main`.
+
+> **Status (2026-06-24):** Steps 1–14 complete + Step 15 (pre-generation questions) complete. Next: Feature A (Session Flow Redesign) → Feature B (Resource Strategy) → Feature 2 (Phase Exams).
 > - ✅ 1–14. (see history below)
 > - ✅ 15. Pre-generation questions layer — chat-style Q&A (3–5 domain-adaptive questions + optional follow-up) before roadmap generation; context injected into `formatOutput` prompt. Haiku for questions, Sonnet for roadmap agent (switched from Gemini Pro 2026-06-24 due to API instability — may revert).
 >
@@ -136,6 +138,63 @@ A conversational flow (chat-like, not a form) that runs before roadmap generatio
 - Language → "what's your current level and target use case (travel, business, fluency)?"
 
 **UX state machine change:** `idle → questioning → generating → preview → saved` (currently skips questioning)
+
+---
+
+### Feature A: Session Flow Redesign
+
+Decided 2026-06-24. Replaces the current subtask-heavy session model with a lightweight, self-directed learning loop.
+
+**Core change:** remove micromanagement from sessions. No more "watch section 3, write in notebook." User decides how to study; the system provides direction and evaluates outcome.
+
+**New session flow:**
+1. User picks hours → planner selects 1–2 topics from 2–3 different sections (interleaving, based on cognitive science research — better long-term retention than single-topic blocks)
+2. Session card shows per topic: title + description + recommended resources + estimated time orientation (e.g. "~45 min of material")
+3. Strict ordering within each section (can't do Matrices before Vectors) but sections progress in parallel across sessions
+4. Maximum 2–3 sections per session to avoid context-switching fatigue
+
+**Post-session evaluation (Feynman-based):**
+1. User writes what they learned per topic in their own words
+2. AI compares explanation against topic's `learningOutcomes` (new field needed — see DB changes)
+3. Decision per topic: done (remove from queue) / not done (stays, re-scheduled next session)
+4. Bonus: if user covered more topics than planned → AI evaluates those too and marks done if understood
+
+**DB changes needed:**
+- Add `learningOutcomes` field to `topics` table — explicit criteria for AI evaluation (currently only `description`, too vague)
+- `subtasks` table: deprioritise — no longer generated during session planning
+- `feynmanReviews` becomes the primary post-session mechanism (not optional), linked per session
+
+**What stays the same:** roadmap hierarchy (phases → sections → topics), Feynman review schema, progress tracking.
+
+---
+
+### Feature B: Resource Strategy
+
+Decided 2026-06-24. Changes how the roadmap agent finds and selects resources. Practice resources deferred — focus is on learning content sources only for now.
+
+**Agent graph order change:** structure is built first, resources are found after (current order is reversed — resources found before structure, causing quality issues).
+
+**New resource search logic (per section):**
+
+1. **Determine source type** — agent decides what format fits the section best before searching:
+   - Visual/conceptual topics (Linear Algebra, Neural Networks) → YouTube playlist
+   - Syntax/reference topics (Python stdlib, React) → official documentation
+   - Deep theory (Algorithms, Math proofs) → book/textbook
+   - Mixed → agent judges based on section character
+
+2. **Find main source** — Tavily search with blacklist applied immediately. For niche topics where Tavily returns unknown sources: additional Reddit search ("best [topic] resources reddit") for honest community recommendations.
+
+3. **Verify coverage (Variant B)** — agent inspects actual source content, not memory:
+   - YouTube playlist → reads video titles in the playlist
+   - Book → reads table of contents
+   - Website → reads page structure/headings
+   - If source is unknown (niche topic found via search) → always use Variant B
+
+4. **Per-topic fallback** — for each topic where confidence of coverage < 90%: find a separate dedicated source for that topic only. Same blacklist applies.
+
+**Blacklist (never include):** Udemy, Coursera, Pluralsight, LinkedIn Learning, edX paid tiers, Skillshare, Medium paywalled articles, SEO "top 10" listicles.
+
+**Practice:** deferred. Often embedded in the learning source itself (books, interactive sites). Will be addressed separately.
 
 ---
 

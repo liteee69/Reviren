@@ -7,7 +7,7 @@ export const roadmaps = pgTable('roadmaps', {
   status: text('status').notNull().default('active'),
   createdAt: timestamp('created_at').notNull().defaultNow(),
   updatedAt: timestamp('updated_at').notNull().defaultNow(),
-})
+}).enableRLS()
 
 export const roadmapPhases = pgTable('roadmap_phases', {
   id: uuid('id').primaryKey().defaultRandom(),
@@ -15,7 +15,7 @@ export const roadmapPhases = pgTable('roadmap_phases', {
   title: text('title').notNull(),
   order: integer('order').notNull(),
   createdAt: timestamp('created_at').notNull().defaultNow(),
-})
+}).enableRLS()
 
 export const sections = pgTable('sections', {
   id: uuid('id').primaryKey().defaultRandom(),
@@ -24,7 +24,7 @@ export const sections = pgTable('sections', {
   description: text('description'),
   order: integer('order').notNull(),
   createdAt: timestamp('created_at').notNull().defaultNow(),
-})
+}).enableRLS()
 
 export const topics = pgTable('topics', {
   id: uuid('id').primaryKey().defaultRandom(),
@@ -36,7 +36,7 @@ export const topics = pgTable('topics', {
   progress: integer('progress').notNull().default(0),
   isCompleted: boolean('is_completed').notNull().default(false),
   createdAt: timestamp('created_at').notNull().defaultNow(),
-})
+}).enableRLS()
 
 export const sessions = pgTable('sessions', {
   id: uuid('id').primaryKey().defaultRandom(),
@@ -45,7 +45,7 @@ export const sessions = pgTable('sessions', {
   startedAt: timestamp('started_at'),
   endedAt: timestamp('ended_at'),
   createdAt: timestamp('created_at').notNull().defaultNow(),
-})
+}).enableRLS()
 
 export const sessionTopics = pgTable('session_topics', {
   id: uuid('id').primaryKey().defaultRandom(),
@@ -54,7 +54,7 @@ export const sessionTopics = pgTable('session_topics', {
   allocatedMinutes: integer('allocated_minutes').notNull().default(60),
   isCovered: boolean('is_covered').notNull().default(false),
   progressDelta: integer('progress_delta'),
-})
+}).enableRLS()
 
 export const subtasks = pgTable('subtasks', {
   id: uuid('id').primaryKey().defaultRandom(),
@@ -64,7 +64,7 @@ export const subtasks = pgTable('subtasks', {
   resourceTitle: text('resource_title'),
   resourceUrl: text('resource_url'),
   order: integer('order').notNull(),
-})
+}).enableRLS()
 
 export const feynmanReviews = pgTable('feynman_reviews', {
   id: uuid('id').primaryKey().defaultRandom(),
@@ -75,7 +75,7 @@ export const feynmanReviews = pgTable('feynman_reviews', {
   feedbackMissing: text('feedback_missing'),
   topicsToFlag: jsonb('topics_to_flag'),
   createdAt: timestamp('created_at').notNull().defaultNow(),
-})
+}).enableRLS()
 
 export const flashcards = pgTable('flashcards', {
   id: uuid('id').primaryKey().defaultRandom(),
@@ -85,4 +85,4 @@ export const flashcards = pgTable('flashcards', {
   isKnown: boolean('is_known').notNull().default(false),
   createdAt: timestamp('created_at').notNull().defaultNow(),
   updatedAt: timestamp('updated_at').notNull().defaultNow(),
-})
+}).enableRLS()
