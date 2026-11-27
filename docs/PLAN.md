@@ -1,7 +1,5 @@
 # Reviren — Plan
 
-> **Checkpoint (2026-10-28):** The owner requested committing and publishing the existing local changes and 14 unpushed commits on `main`. This checkpoint includes structure-first roadmap generation with section-level resource selection and topic fallbacks, filtered resource search, the server-only data-access migration and RLS schema flags, diagnostic scripts, and the saved pre-generation Q&A plan. Verification: 10/10 unit tests, TypeScript, production build, and lint for the changed source files pass. Full-project lint still reports 5 errors and 2 warnings; all error locations are unchanged from `origin/main`.
-
 > **Status (2026-06-24):** Steps 1–14 complete + Step 15 (pre-generation questions) complete. Next: Feature A (Session Flow Redesign) → Feature B (Resource Strategy) → Feature 2 (Phase Exams).
 > - ✅ 1–14. (see history below)
 > - ✅ 15. Pre-generation questions layer — chat-style Q&A (3–5 domain-adaptive questions + optional follow-up) before roadmap generation; context injected into `formatOutput` prompt. Haiku for questions, Sonnet for roadmap agent (switched from Gemini Pro 2026-06-24 due to API instability — may revert).
