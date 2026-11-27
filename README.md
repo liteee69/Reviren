@@ -2,7 +2,7 @@
 
 A study planner that turns a topic into a learning roadmap and helps you work through it session by session.
 
-> **Status:** work in progress. I plan to finish this project and then pivot it in a new direction.
+> **Status:** work in progress. I plan to pivot this project in a new direction and then finish it.
 
 ## Why
 
