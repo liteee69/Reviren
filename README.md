@@ -2,6 +2,8 @@
 
 A study planner that turns a topic into a learning roadmap and helps you work through it session by session.
 
+> **Status:** work in progress. I plan to finish this project and then pivot it in a new direction.
+
 ## Why
 
 When you teach yourself a subject, you need a plan, time to study, and a way to check that you understood it. Most tools cover only one of these. Notion is a blank page. Anki only does flashcards. Online courses have a fixed path. Reviren puts the roadmap, the study sessions, progress tracking and self-testing in one app.
